@@ -1,0 +1,21 @@
+# Dependencies and builds
+node_modules/
+dist/
+
+# Local data: SQLite file, uploaded resumes, settings (personal data, never commit)
+data/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Fixtures with real personal data go here; committed fixtures use fake people
+fixtures/private/
+
+# Editors and OS
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
