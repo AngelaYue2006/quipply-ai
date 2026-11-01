@@ -1,0 +1,89 @@
+{
+  "identity": { "firstName": "Testy", "middleName": "Q", "lastName": "McTestface", "preferredName": "" },
+  "contact": {
+    "email": "testy.m@example.com",
+    "phone": "555-0100",
+    "street": "",
+    "city": "",
+    "state": "",
+    "postalCode": "",
+    "country": ""
+  },
+  "links": {
+    "linkedin": "https://www.linkedin.com/in/example-testy",
+    "github": "https://github.com/example-testy",
+    "portfolio": "",
+    "other": [{ "label": "Blog", "url": "https://blog.example.com" }]
+  },
+  "education": [
+    {
+      "school": "Example State University",
+      "degreeType": "BS",
+      "majors": ["Computer Science"],
+      "minors": [],
+      "gpa": "3.75",
+      "gpaScale": "4.0",
+      "start": "2023-09",
+      "graduation": "2027-05",
+      "coursework": ["Data Structures", "Operating Systems"],
+      "honors": []
+    },
+    {
+      "school": "Springfield Community College",
+      "degreeType": "other",
+      "majors": [],
+      "minors": [],
+      "gpa": "",
+      "gpaScale": "",
+      "start": "",
+      "graduation": "2023",
+      "coursework": [],
+      "honors": []
+    }
+  ],
+  "experience": [
+    {
+      "company": "Acme Widgets",
+      "title": "Software Engineering Intern",
+      "employmentType": "internship",
+      "location": "Springfield",
+      "start": "2025-06",
+      "end": "2025-08",
+      "current": false,
+      "bullets": [
+        "Built REST APIs in TypeScript and Node.js serving 2k requests per minute",
+        "Wrote Python scripts to clean sensor data",
+        "  Added integration tests  "
+      ],
+      "skills": ["TypeScript", "Node.js", "Python"]
+    },
+    {
+      "company": "Example Labs",
+      "title": "Research Assistant",
+      "employmentType": "research",
+      "location": "",
+      "start": "2025-09",
+      "end": "Present",
+      "current": true,
+      "bullets": ["Trained small models on synthetic data"],
+      "skills": ["PyTorch"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Weather Bot",
+      "role": "",
+      "start": "",
+      "end": "",
+      "bullets": ["Chat bot that reports the weather"],
+      "skills": ["Go"],
+      "link": ""
+    }
+  ],
+  "skills": {
+    "languages": ["Python", "Go"],
+    "frameworks": ["PyTorch"],
+    "tools": ["Docker", "Kubernetes"],
+    "domains": []
+  }
+}

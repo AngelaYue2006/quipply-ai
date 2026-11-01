@@ -1,0 +1,62 @@
+{
+  "requirements": [
+    {
+      "text": "Pursuing a CS degree",
+      "kind": "required",
+      "category": "education",
+      "met": "yes",
+      "jobQuote": "Currently pursuing a BS or MS in Computer Science or a related field",
+      "profileEvidence": "Computer Science"
+    },
+    {
+      "text": "Python or Java",
+      "kind": "required",
+      "category": "skill",
+      "met": "yes",
+      "jobQuote": "Proficiency in Python or Java",
+      "profileEvidence": "Python"
+    },
+    {
+      "text": "REST API experience",
+      "kind": "required",
+      "category": "experience",
+      "met": "yes",
+      "jobQuote": "Experience building REST APIs",
+      "profileEvidence": "Built REST APIs in TypeScript and Node.js serving 2k requests per minute"
+    },
+    {
+      "text": "Kubernetes in production",
+      "kind": "required",
+      "category": "skill",
+      "met": "yes",
+      "jobQuote": "Experience with Kubernetes in production",
+      "profileEvidence": "Ran Kubernetes clusters for three years"
+    },
+    {
+      "text": "Go",
+      "kind": "preferred",
+      "category": "skill",
+      "met": "no",
+      "jobQuote": "Experience with Go",
+      "profileEvidence": null
+    },
+    {
+      "text": "PostgreSQL",
+      "kind": "preferred",
+      "category": "skill",
+      "met": "yes",
+      "jobQuote": "Familiarity with PostgreSQL",
+      "profileEvidence": "PostgreSQL"
+    },
+    {
+      "text": "Communication skills",
+      "kind": "preferred",
+      "category": "other",
+      "met": "unclear",
+      "jobQuote": "Strong communication skills",
+      "profileEvidence": null
+    }
+  ],
+  "hardRequirements": [{ "text": "Based in Chicago", "jobQuote": "This role is based in Chicago, IL." }],
+  "summary": "Strong backend and Python background; no Go experience."
+}

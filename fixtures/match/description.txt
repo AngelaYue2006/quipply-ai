@@ -1,0 +1,17 @@
+Software Engineering Intern, Summer 2027 (test fixture; describes no real job)
+
+About the role
+You will build backend services that power our fictional logistics platform.
+
+Basic Qualifications
+- Currently pursuing a BS or MS in Computer Science or a related field
+- Proficiency in Python or Java
+- Experience building REST APIs
+- Experience with Kubernetes in production
+
+Preferred Qualifications
+- Experience with Go
+- Familiarity with PostgreSQL
+- Strong communication skills
+
+This role is based in Chicago, IL. Visa sponsorship is available.
