@@ -1,0 +1,9 @@
+- Work one milestone at a time; at the end of each, run its acceptance check, update `CHANGELOG.md`, and stop for review.
+- Matching follows the Matching section exactly: rules in code, one model call that returns a checklist, score and verdict computed in code. The model must never produce the score, and eligibility must never depend on the model.
+- No timers, cron jobs or background polling. Every network call to a job site or model starts from a button or a script you run.
+- Route every model call through `src/llm/`; never call the SDK directly elsewhere.
+- Don't invent profile data; tests and fixtures use clearly fake people.
+- Tests never hit the network or call a model; record responses as fixtures.
+- Verify external details (listings URL and fields, ATS API endpoints, Anthropic SDK options for PDFs and structured output, model IDs and prices) against current docs or live responses before relying on them, and note what you verified in the changelog.
+- Pin dependency versions. Ask before adding a dependency with native builds beyond better-sqlite3, or sending data to a new service.
+- When a decision in this spec changes, update `SPEC.md` in the same commit.
