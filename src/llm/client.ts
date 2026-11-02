@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
+import { providerFor, type LlmProvider } from '../config';
 
 /** A document attached to the user message (only PDFs in V1). */
 export type LlmDocument = { kind: 'pdf'; base64: string };
@@ -106,6 +107,32 @@ export class AnthropicLlmClient implements LlmClient {
       if (err instanceof Anthropic.APIError) throw new LlmError(`Anthropic API error ${err.status}: ${err.message}`, 'api_error');
       throw err;
     }
+  }
+}
+
+/**
+ * Sends each request to the provider its model ID names (claude-* or gemini-*).
+ * Each real client is created on first use, so a missing key only fails calls that need it.
+ */
+export class RoutingLlmClient implements LlmClient {
+  private clients = new Map<LlmProvider, LlmClient>();
+  constructor(private factories: Record<LlmProvider, () => LlmClient>) {}
+
+  complete(req: LlmRequest): Promise<LlmResponse> {
+    const provider = providerFor(req.model);
+    if (!provider) {
+      return Promise.reject(new LlmError(`Unknown model "${req.model}". Use a claude-… or gemini-… model ID.`, 'api_error'));
+    }
+    let client = this.clients.get(provider);
+    if (!client) {
+      try {
+        client = this.factories[provider]();
+      } catch (err) {
+        return Promise.reject(err);
+      }
+      this.clients.set(provider, client);
+    }
+    return client.complete(req);
   }
 }
 

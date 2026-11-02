@@ -6,7 +6,8 @@ import path from 'node:path';
 import { ZodError } from 'zod';
 import type { AppConfig } from '../config';
 import type { Db } from '../db/client';
-import { AnthropicLlmClient, LlmError, type LlmClient } from '../llm/client';
+import { LlmError, type LlmClient } from '../llm/client';
+import { createLlmClient } from '../llm/create';
 import { UserError, MAX_RESUME_BYTES } from '../profile/resumes';
 import type { JobSource } from '../jobs/sources/types';
 import { SimplifyInternshipsSource } from '../jobs/sources/simplify-internships';
@@ -40,7 +41,7 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
   const ctx: AppContext = {
     db: opts.db,
     cfg: opts.cfg,
-    llm: () => (llm ??= new AnthropicLlmClient(opts.cfg.anthropicApiKey)),
+    llm: () => (llm ??= createLlmClient(opts.cfg)),
     source: () => opts.source ?? new SimplifyInternshipsSource(opts.cfg.listingsUrl, opts.fetchImpl),
     fetchImpl: opts.fetchImpl ?? fetch,
   };

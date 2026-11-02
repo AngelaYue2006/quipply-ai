@@ -2,5 +2,5 @@
 import { ensureEnvFile } from '../src/env-file';
 
 const { created, tokenGenerated } = ensureEnvFile();
-if (created) console.log('Created .env from .env.example. Add your ANTHROPIC_API_KEY there.');
+if (created) console.log('Created .env from .env.example. Add your GEMINI_API_KEY (or ANTHROPIC_API_KEY) there.');
 if (tokenGenerated) console.log('Generated a new QUIPPLY_TOKEN in .env.');

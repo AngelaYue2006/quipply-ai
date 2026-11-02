@@ -13,7 +13,11 @@ export default tseslint.config(
       // Every model call must go through src/llm/ (CLAUDE.md).
       'no-restricted-imports': [
         'error',
-        { patterns: [{ group: ['@anthropic-ai/sdk', '@anthropic-ai/sdk/*'], message: 'Call models through src/llm/ only.' }] },
+        {
+          patterns: [
+            { group: ['@anthropic-ai/sdk', '@anthropic-ai/sdk/*', '@google/genai', '@google/genai/*'], message: 'Call models through src/llm/ only.' },
+          ],
+        },
       ],
     },
   },

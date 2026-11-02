@@ -1,5 +1,22 @@
 # Changelog
 
+## Gemini support (2026-11-01)
+
+- Model calls can now go to Gemini as well as Claude. The provider is picked from the model ID (`gemini-…` or `claude-…`); each uses its own key in `.env` (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`). With a Gemini key set, defaults are `gemini-3.5-flash-lite` (matching) and `gemini-3.8-flash` (resume import). Settings rejects model IDs from other providers and shows which key each model needs.
+- New `src/llm/gemini.ts` and `src/llm/create.ts`; `RoutingLlmClient` in `src/llm/client.ts`. ESLint now also bans importing `@google/genai` outside `src/llm/`. Matching logic is unchanged: code still decides eligibility, score and verdict.
+- Dependency: `@google/genai` 2.32.0 (pinned, no native build). Its blocked install scripts are a no-op echo and a protobufjs version warning, so they stay blocked.
+- Requests are sent with `store: false` so Google doesn't keep them. On the free tier, Google may use prompts to improve its products; a paid key doesn't.
+- Tests: 110 pass (5 new: routing, missing-key errors, the Gemini request shape, Gemini cost, and Settings key reporting). No network.
+- Also fixed the `PULL_WINDOW_DAYS` comment in `.env.example` (any number of days now works).
+
+### Verified external details (2026-11-01)
+
+- ai.google.dev models page: stable text models `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.6-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`; all accept PDF input and support structured outputs.
+- Pricing page (paid, standard, per 1M tokens, output includes thinking): 3.5 Flash-Lite $0.30 / $2.50; 3.8 Flash and 3.6 Flash $0.75 / $3.75 through 2026-12-31, then $1.50 / $7.50; 4 Argon $2 / $10 through 2026-11-30, then $4 / $20; 3.1 Flash-Lite $0.25 / $1.50. Free tier: "used to improve our products" yes; paid: no.
+- Interactions API (`client.interactions.create`): `system_instruction`, `input` as `user_input` / `model_output` steps, `response_format: { type: 'text', mime_type: 'application/json', schema }`, `generation_config.max_output_tokens`, `store`; PDFs as `{ type: 'document', data, mime_type: 'application/pdf' }` (up to 50 MB / 1000 pages). Response: `status`, `output_text`, `usage.total_input_tokens` / `total_output_tokens` / `total_thought_tokens`. Checked against the SDK's type definitions and by capturing the SDK's request with a local fake server (`POST /v1beta/interactions`, key in `x-goog-api-key`).
+- Live check: the Gemini key lists all four models above. One `match:demo` run (fake profile, public NYT posting, scratch database) with `gemini-3.5-flash-lite` returned schema-valid JSON on the first try: 2,181 input / 658 output tokens, about $0.0023, 2.3 s. Resume import on Gemini hasn't been run live yet.
+- Seen in that run: the quote check dropped the evidence "Software Engineering Intern at Acme Widgets" because it joins two profile fields rather than quoting one. Worth revisiting when tuning matching.
+
 ## V1 dark theme and job-board scrolling (2026-11-01)
 
 - Switched the full frontend to a dark ink palette with lilac actions, muted colored accents, and softer asymmetric shapes. Forms, badges, notices, profile sections, resume review, and job details use the same dark palette; native controls use dark color-scheme.

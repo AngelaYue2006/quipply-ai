@@ -92,7 +92,7 @@ function ResumesCard() {
   return (
     <Card
       title="Resumes"
-      description="PDFs stay on this machine. Import sends the PDF to Claude once to draft your profile; you review every field before anything is saved."
+      description="PDFs stay on this machine. Import sends the PDF to your resume import model (Settings) once to draft your profile; you review every field before anything is saved."
       actions={
         <>
           <input
@@ -148,7 +148,7 @@ function ResumesCard() {
       )}
       {importIt.isPending && (
         <p className="mt-3 flex items-center gap-2 text-sm text-slate-300">
-          <Spinner /> Reading your resume with Claude. This usually takes under a minute…
+          <Spinner /> Reading your resume. This usually takes under a minute…
         </p>
       )}
     </Card>

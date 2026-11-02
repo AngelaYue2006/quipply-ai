@@ -41,11 +41,27 @@ describe('API security', () => {
   });
 
   it('never sends the API key to the browser', async () => {
-    const a = await buildApp({ db: testDb(), cfg: testConfig({ anthropicApiKey: 'sk-ant-secret-value' }) });
+    const a = await buildApp({ db: testDb(), cfg: testConfig({ anthropicApiKey: 'sk-ant-secret-value', geminiApiKey: 'gemini-secret-value' }) });
     const res = await a.inject({ method: 'GET', url: '/api/settings', headers: ok });
     expect(res.statusCode).toBe(200);
     expect(res.body).not.toContain('sk-ant-secret-value');
-    expect(res.json().apiKeySet).toBe(true);
+    expect(res.body).not.toContain('gemini-secret-value');
+    expect(res.json()).toMatchObject({ apiKeySet: true, keys: { anthropic: true, gemini: true }, missingKeys: [] });
+  });
+
+  it('reports a missing key for the provider a model needs, and rejects unknown model IDs', async () => {
+    const cfg = testConfig({ matchModel: 'gemini-3.5-flash-lite', importModel: 'claude-opus-5-5', anthropicApiKey: 'sk-ant-x' });
+    const a = await buildApp({ db: testDb(), cfg });
+    const res = (await a.inject({ method: 'GET', url: '/api/settings', headers: ok })).json();
+    expect(res.apiKeySet).toBe(false);
+    expect(res.missingKeys).toEqual(['Score match uses gemini-3.5-flash-lite, but GEMINI_API_KEY is empty in .env.']);
+    const bad = await a.inject({
+      method: 'PUT',
+      url: '/api/settings',
+      headers: ok,
+      payload: { ...res.settings, matchModel: 'gpt-5' },
+    });
+    expect(bad.statusCode).toBe(400);
   });
 });
 

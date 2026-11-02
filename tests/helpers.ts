@@ -14,7 +14,7 @@ export function testDb() {
 
 export function testConfig(over: Partial<AppConfig> = {}): AppConfig {
   const dataDir = mkdtempSync(path.join(os.tmpdir(), 'quipply-test-'));
-  return loadConfig({ dataDir, resumesDir: path.join(dataDir, 'resumes'), token: TEST_TOKEN, port: 4317, devWebPort: 5173, anthropicApiKey: '', ...over });
+  return loadConfig({ dataDir, resumesDir: path.join(dataDir, 'resumes'), token: TEST_TOKEN, port: 4317, devWebPort: 5173, anthropicApiKey: '', geminiApiKey: '', ...over });
 }
 
 export function fixture(name: string): string {

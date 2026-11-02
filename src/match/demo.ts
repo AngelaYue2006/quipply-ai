@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 import { loadConfig } from '../config';
 import { openDb } from '../db/client';
 import { jobDescriptions, jobs } from '../db/schema';
-import { AnthropicLlmClient } from '../llm/client';
+import { createLlmClient } from '../llm/create';
 import { getProfile } from '../profile/service';
 import { Profile } from '../shared/profile';
 import { buildFitMessages, makeLlmFit } from './llm-fit';
@@ -61,7 +61,7 @@ const elig = checkEligibility(input);
 console.log(JSON.stringify({ ...elig, handled: [...elig.handled] }, null, 2));
 
 let raw = '';
-const client = new AnthropicLlmClient(cfg.anthropicApiKey);
+const client = createLlmClient(cfg);
 const fitCall = makeLlmFit({ db, client, model: cfg.matchModel });
 const matcher = new RubricMatcher(async (i) => {
   const out = await fitCall(i);

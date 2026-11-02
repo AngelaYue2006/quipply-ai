@@ -2,7 +2,7 @@
 
 A local, single-user internship tracker. Enter your profile once (or import it from your resume), pull the current Simplify / Pitt CSC internship list with one button, and score each job against your profile: eligibility, strengths with evidence, and gaps.
 
-Everything runs on your machine. The only outside traffic is the listings file, job description pages/APIs, and Claude API calls you trigger.
+Everything runs on your machine. The only outside traffic is the listings file, job description pages/APIs, and model calls (Gemini or Claude) you trigger.
 
 ## Run it
 
@@ -15,7 +15,7 @@ pnpm dev
 
 Then open **http://127.0.0.1:5173**.
 
-On first run `pnpm dev` creates `.env` (if missing) and adds a random `QUIPPLY_TOKEN`. Put your key in `ANTHROPIC_API_KEY`; resume import and Score match need it.
+On first run `pnpm dev` creates `.env` (if missing) and adds a random `QUIPPLY_TOKEN`. Put your key in `GEMINI_API_KEY` (or `ANTHROPIC_API_KEY` for Claude models); resume import and Score match need it. The provider is picked from the model name on the Settings screen: `gemini-…` or `claude-…`.
 
 Production-style: `pnpm build && pnpm start`, then open http://127.0.0.1:4317.
 

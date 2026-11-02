@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { sql } from 'drizzle-orm';
 import type { AppContext } from '../app';
-import { EditableSettings, saveSettings } from '../../config';
+import { EditableSettings, missingKeys, saveSettings } from '../../config';
 import { llmCalls } from '../../db/schema';
 
 export const settingsRoutes =
@@ -29,7 +29,9 @@ export const settingsRoutes =
           pullWindowDays: cfg.pullWindowDays,
         },
         dataDir: cfg.dataDir,
-        apiKeySet: Boolean(cfg.anthropicApiKey),
+        apiKeySet: missingKeys(cfg).length === 0,
+        keys: { anthropic: Boolean(cfg.anthropicApiKey), gemini: Boolean(cfg.geminiApiKey) },
+        missingKeys: missingKeys(cfg),
         costs,
         totalCostUsd: costs.reduce((sum, c) => sum + c.costUsd, 0),
       };

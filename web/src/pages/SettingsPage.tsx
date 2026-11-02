@@ -11,6 +11,8 @@ type SettingsView = {
   settings: Settings;
   dataDir: string;
   apiKeySet: boolean;
+  keys: { anthropic: boolean; gemini: boolean };
+  missingKeys: string[];
   costs: { action: string; calls: number; costUsd: number; inputTokens: number; outputTokens: number }[];
   totalCostUsd: number;
 };
@@ -66,6 +68,9 @@ export function SettingsPage() {
                 <Label htmlFor="import-model">Resume import model</Label>
                 <Input id="import-model" {...form.register('importModel', { required: true })} />
               </div>
+              <p className="text-xs text-slate-400 sm:col-span-2">
+                Models starting with <code>gemini-</code> use Google; <code>claude-</code> uses Anthropic. Examples: gemini-3.5-flash-lite, gemini-3.8-flash, claude-haiku-5-5.
+              </p>
               <div className="sm:col-span-2">
                 <Label htmlFor="listings-url" hint="the repo name changes each recruiting season">Listings source URL</Label>
                 <Input id="listings-url" type="url" {...form.register('listingsUrl', { required: true })} />
@@ -81,8 +86,13 @@ export function SettingsPage() {
 
         <Card title="Environment" description="Set in .env; restart the server after changing it.">
           <dl className="grid grid-cols-[10rem_1fr] gap-y-2 text-sm">
+            <dt className="text-slate-400">Gemini API key</dt>
+            <dd>{v.keys.gemini ? <Badge color="green">set</Badge> : <Badge>not set</Badge>}</dd>
             <dt className="text-slate-400">Anthropic API key</dt>
-            <dd>{v.apiKeySet ? <Badge color="green">set</Badge> : <Badge color="red">missing: add ANTHROPIC_API_KEY to .env</Badge>}</dd>
+            <dd>{v.keys.anthropic ? <Badge color="green">set</Badge> : <Badge>not set</Badge>}</dd>
+            {v.missingKeys.map((m) => (
+              <dd key={m} className="col-span-2 text-amber-200">{m}</dd>
+            ))}
             <dt className="text-slate-400">Data folder</dt>
             <dd className="font-mono text-xs break-all text-slate-300">{v.dataDir}</dd>
           </dl>

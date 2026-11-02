@@ -54,6 +54,8 @@ Use the plain Anthropic TypeScript SDK for anything that is one model call with 
 
 **One `llm` module.** Every model call goes through `src/llm/` with one function shape, roughly `structured({ schema, prompt, input, model, promptVersion })`. It handles retries, Zod validation (one repair retry on invalid JSON), logging to `llm_calls`, and cost. Prompts live as versioned files in `src/llm/prompts/`. If you ever want to swap providers, only this module changes.
 
+**Providers (decided Nov 1, 2026):** `src/llm/` supports both Gemini (`@google/genai`, Interactions API) and Claude (`@anthropic-ai/sdk`). The provider comes from the model ID: `gemini-…` uses `GEMINI_API_KEY`, `claude-…` uses `ANTHROPIC_API_KEY`. With a Gemini key set, the defaults are `gemini-3.5-flash-lite` for matching and `gemini-3.8-flash` for resume import; otherwise `claude-haiku-5-5` and `claude-opus-5-5`. Gemini gets the same JSON Schema (from Zod) as structured output, the resume PDF as an inline document, and `store: false` so requests aren't kept on Google's servers. On Gemini's free tier, Google may use prompts to improve its products; a paid key doesn't. Matching rules are unchanged: the model still only returns the checklist, and code computes eligibility, score and verdict.
+
 **Considered and not recommended now:**
 
 - **LangChain / LangGraph:** a large abstraction layer for chains and graphs you don't have. It adds debugging cost, and the TypeScript versions trail the Python ones.
@@ -75,10 +77,10 @@ One TypeScript app: a local server that stores data and serves a React dashboard
 | Dashboard | React + Vite, Tailwind + shadcn/ui components, TanStack Query for data, TanStack Table (virtualized) for the job list, React Hook Form + Zod for profile forms |
 | Database | SQLite via better-sqlite3, Drizzle ORM and migrations |
 | Validation | Zod schemas in `src/shared/`, used by server and dashboard |
-| Model calls | `@anthropic-ai/sdk` behind `src/llm/` (see Frameworks) |
+| Model calls | `@google/genai` and `@anthropic-ai/sdk` behind `src/llm/`, picked by model ID (see Frameworks) |
 | HTML extraction | `jsdom` + `@mozilla/readability` for descriptions without an API |
 | Tests | Vitest; saved JSON and HTML fixtures, no live network in tests |
-| Config | `.env`: `ANTHROPIC_API_KEY`, port, data folder, model IDs |
+| Config | `.env`: `GEMINI_API_KEY` and/or `ANTHROPIC_API_KEY`, port, data folder, model IDs |
 
 ```text
 apply-engine/
