@@ -37,10 +37,18 @@ function ScoreCell({ m }: { m: JobRow['match'] }) {
   if (!m || m.status === 'not_scored') return <span className="text-xs text-slate-400">Not scored</span>;
   if (m.status === 'error') return <Badge color="red">error</Badge>;
   const color = m.verdict ? VERDICT_COLOR[m.verdict] : 'gray';
+  const b = m.verdict === 'ineligible' ? undefined : m.basis;
+  const basisText = b ? `Based on ${b.judged} of ${b.total} requirements` : '';
   return (
-    <span className={cx('inline-flex items-center gap-1', m.stale && 'opacity-50')} title={m.stale ? 'Profile changed; rescore' : m.verdict ?? ''}>
-      <Badge color={color}>{m.verdict === 'ineligible' ? 'Ineligible' : (m.score === null ? 'No score' : `${m.score} / 100`)}</Badge>
-      {m.stale && <span className="text-xs text-slate-400">↻</span>}
+    <span
+      className={cx('inline-flex flex-col items-start gap-1', m.stale && 'opacity-50')}
+      title={[m.stale ? 'Profile or matcher changed; rescore' : m.verdict ?? '', basisText].filter(Boolean).join(' · ')}
+    >
+      <span className="inline-flex items-center gap-1">
+        <Badge color={color}>{m.verdict === 'ineligible' ? 'Ineligible' : (m.score === null ? 'No score' : `${m.score} / 100`)}</Badge>
+        {m.stale && <span className="text-xs text-slate-400">↻</span>}
+      </span>
+      {b && <span className={cx('text-[11px] tabular-nums', b.judged < 3 ? 'text-amber-200' : 'text-slate-400')}>{b.judged} of {b.total} judged</span>}
     </span>
   );
 }

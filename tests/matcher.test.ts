@@ -39,6 +39,23 @@ describe('quote check', () => {
     expect(checked.requirements.find((r) => r.text === 'Python or Java')!.met).toBe('yes');
   });
 
+  it('reports each rejected item with what the model claimed and why it was rejected', () => {
+    const fit = FitChecklist.parse(JSON.parse(RECORDED));
+    const invented = { ...fit, requirements: [...fit.requirements, { ...fit.requirements[1]!, text: 'Fortran', jobQuote: 'Ten years of Fortran' }] };
+    const { ignored } = verifyQuotes(invented, DESCRIPTION, matchProfileSubset(fakeProfile()));
+    expect(ignored).toEqual([
+      {
+        point: 'Kubernetes in production',
+        kind: 'required',
+        claimed: 'yes',
+        jobQuote: 'Experience with Kubernetes in production',
+        profileEvidence: 'Ran Kubernetes clusters for three years',
+        reasons: ['evidence_not_found'],
+      },
+      { point: 'Fortran', kind: 'required', claimed: 'yes', jobQuote: 'Ten years of Fortran', profileEvidence: 'Python', reasons: ['job_quote_not_found'] },
+    ]);
+  });
+
   it('ignores case, whitespace and curly quotes, and accepts quotes with ellipses', () => {
     const fit = FitChecklist.parse({
       requirements: [
@@ -48,6 +65,50 @@ describe('quote check', () => {
       summary: '',
     });
     expect(verifyQuotes(fit, DESCRIPTION, matchProfileSubset(fakeProfile())).failed).toBe(0);
+  });
+
+  const evidenceCheck = (profileEvidence: string) =>
+    verifyQuotes(
+      FitChecklist.parse({
+        requirements: [{ text: 'x', kind: 'required', category: 'skill', met: 'yes', jobQuote: 'proficiency in Python', profileEvidence }],
+        hardRequirements: [],
+        summary: '',
+      }),
+      DESCRIPTION,
+      matchProfileSubset(fakeProfile()),
+    ).failed === 0;
+
+  it('accepts evidence that lists exact profile entries', () => {
+    expect(evidenceCheck('Python, TypeScript, Rust')).toBe(true);
+    expect(evidenceCheck('Git; Docker and PostgreSQL')).toBe(true);
+    expect(evidenceCheck('BS in Computer Science')).toBe(true);
+    expect(evidenceCheck('Software Engineering Intern at Acme Widgets')).toBe(true);
+    expect(evidenceCheck('Tiny Compiler, Rust')).toBe(true);
+  });
+
+  it('accepts evidence stitched from whole fields of one entry, with field names', () => {
+    // Real case: the model joined school, degree type, major and graduation from one education entry.
+    expect(evidenceCheck('Example State University, BS Computer Science, graduation 2027-05')).toBe(true);
+    expect(evidenceCheck('BS Computer Science')).toBe(true);
+    expect(evidenceCheck('GPA: 3.70')).toBe(true);
+    expect(evidenceCheck('Operating Systems coursework')).toBe(true);
+    expect(evidenceCheck('Software Engineering Intern, Acme Widgets (2025-06 - 2025-08)')).toBe(true);
+  });
+
+  it('rejects stitched evidence with a wrong value, a partial value or fields from different entries', () => {
+    expect(evidenceCheck('BS Data Science')).toBe(false); // wrong major
+    expect(evidenceCheck('Example State University, graduation 2026-05')).toBe(false); // wrong date
+    expect(evidenceCheck('Acme Widgets Computer Science')).toBe(false); // a job and a school
+    expect(evidenceCheck('graduation')).toBe(false); // a field name with no value
+    expect(evidenceCheck('Built Python APIs')).toBe(false); // words from bullets, not a whole value
+  });
+
+  it('still rejects lists with an invented or partial entry, and entries stitched across jobs or schools', () => {
+    expect(evidenceCheck('Python, Kubernetes')).toBe(false); // Kubernetes isn't in the profile
+    expect(evidenceCheck('PostgreSQL, SQL')).toBe(false); // SQL only appears inside "PostgreSQL"
+    expect(evidenceCheck('Software Engineering Intern at Example State University')).toBe(false); // job + school
+    expect(evidenceCheck('Built APIs and wrote scripts')).toBe(false); // paraphrase
+    expect(evidenceCheck('Machine Learning coursework')).toBe(false); // not in this profile's coursework
   });
 });
 

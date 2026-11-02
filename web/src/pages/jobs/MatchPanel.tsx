@@ -4,6 +4,7 @@ import { Badge, Button, Spinner, cx } from '../../components/ui';
 import { useToast } from '../../components/toast';
 import { VERDICT_COLOR, timeAgo } from '../../format';
 import type { JobDetail } from '../../../../src/shared/job';
+import { MATCHER_VERSION } from '../../../../src/shared/match';
 import { useUpdateJobRow } from './useJobs';
 
 export function MatchPanel({ job }: { job: JobDetail }) {
@@ -50,7 +51,7 @@ export function MatchPanel({ job }: { job: JobDetail }) {
         <div className="space-y-4">
           {m.stale && (
             <div className="rounded-md border border-amber-800 bg-amber-950 px-3 py-2 text-sm text-amber-200">
-              {m.matcherVersion !== 'rubric@1' ? 'The matcher changed since this score' : 'Your profile changed since this score'}. Rescore to update it.
+              {m.matcherVersion !== MATCHER_VERSION ? 'The matcher changed since this score' : 'Your profile changed since this score'}. Rescore to update it.
             </div>
           )}
 
@@ -79,6 +80,13 @@ export function MatchPanel({ job }: { job: JobDetail }) {
                 <span className={cx('text-3xl font-semibold tabular-nums', m.stale ? 'text-slate-400' : 'text-slate-100')}>{m.score ?? '—'}<span className="ml-1 text-sm font-normal text-slate-400">/ 100</span></span>
                 {m.verdict && <Badge color={VERDICT_COLOR[m.verdict]}>{m.verdict}</Badge>}
                 <span className="ml-auto text-xs text-slate-400">scored {timeAgo(m.computedAt)}</span>
+                {m.basis && (
+                  <p className={cx('w-full text-xs', m.basis.judged < 3 ? 'text-amber-200' : 'text-slate-400')}>
+                    Based on {m.basis.judged} of {m.basis.total} requirement{m.basis.total === 1 ? '' : 's'}.
+                    {m.basis.judged < m.basis.total &&
+                      ` The other ${m.basis.total - m.basis.judged} couldn't be judged from your profile (soft skills, or evidence not found) and don't count.`}
+                  </p>
+                )}
               </div>
               {m.summary && <p className="text-sm text-slate-300">{m.summary}</p>}
 
@@ -120,19 +128,60 @@ export function MatchPanel({ job }: { job: JobDetail }) {
                     {[...m.skills.required.map((s) => ({ ...s, req: true })), ...m.skills.preferred.map((s) => ({ ...s, req: false }))].map((s, i) => (
                       <span
                         key={i}
-                        title={s.req ? 'required' : 'preferred'}
+                        title={`${s.req ? 'required' : 'preferred'}${s.partial ? ', partly met (half credit)' : ''}`}
                         className={cx(
                           'rounded-full border px-2 py-0.5 text-xs',
-                          s.have ? 'border-emerald-800 bg-emerald-950 text-emerald-200' : 'border-red-800 bg-red-950 text-red-200',
+                          s.have
+                            ? 'border-emerald-800 bg-emerald-950 text-emerald-200'
+                            : s.partial
+                              ? 'border-amber-800 bg-amber-950 text-amber-200'
+                              : 'border-red-800 bg-red-950 text-red-200',
                           !s.req && 'border-dashed',
                         )}
                       >
-                        {s.have ? '✓' : '✗'} {s.skill}
+                        {s.have ? '✓' : s.partial ? '½' : '✗'} {s.skill}
                       </span>
                     ))}
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-400">Dashed = preferred</p>
+                  <p className="mt-1 text-[11px] text-slate-400">✓ met · ½ partly met · ✗ missing · dashed = preferred</p>
                 </div>
+              )}
+
+              {m.ignored && m.ignored.length > 0 && (
+                <details className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
+                  <summary className="cursor-pointer text-xs font-medium text-slate-300">
+                    Not counted ({m.ignored.length}): the model's quotes couldn't be found word for word
+                  </summary>
+                  <p className="mt-2 text-xs text-slate-400">
+                    These don't affect the score. If your profile does show one of these, adding the exact wording to your profile helps.
+                  </p>
+                  <ul className="mt-2 space-y-3">
+                    {m.ignored.map((g, i) => (
+                      <li key={i} className="text-sm">
+                        <p className="text-slate-200">
+                          <Badge color={g.kind === 'required' ? 'red' : 'gray'} className="mr-1.5">
+                            {g.kind}
+                          </Badge>
+                          {g.point} <span className="text-xs text-slate-400">(model said: {g.claimed})</span>
+                        </p>
+                        <p className="mt-1 border-l-2 border-slate-800 pl-2 text-xs text-slate-400">
+                          Posting: “{g.jobQuote}”
+                          {g.reasons.includes('job_quote_not_found') && <span className="text-amber-200"> — not in the posting</span>}
+                          {g.profileEvidence !== null && (
+                            <>
+                              <br />
+                              You: “{g.profileEvidence}”
+                              {g.reasons.includes('evidence_not_found') && <span className="text-amber-200"> — not in your profile</span>}
+                            </>
+                          )}
+                          {g.profileEvidence === null && g.reasons.includes('evidence_not_found') && (
+                            <span className="text-amber-200"><br />No profile quote given</span>
+                          )}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )}
             </>
           )}

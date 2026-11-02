@@ -59,7 +59,7 @@ describe('assemble', () => {
     expect(r.gaps.map((g) => g.severity)).toEqual(['required', 'required', 'preferred']);
     expect(r.skills.required).toEqual([
       { skill: 'Python', have: true },
-      { skill: 'Go', have: false },
+      { skill: 'Go', have: false, partial: true },
     ]);
     expect(r.skills.preferred).toEqual([{ skill: 'Kubernetes', have: false }]);
     expect(r.warnings.join('\n')).toMatch(/1 item\(s\) quoted text/);
@@ -69,6 +69,11 @@ describe('assemble', () => {
   it('adds "low confidence" with fewer than 3 judged items', () => {
     const r = assemble(elig, fit([req('required', 'yes'), req('required', 'unclear')]), { quoteFailures: 0, truncated: false });
     expect(r.warnings).toContain('low confidence');
+  });
+
+  it('reports how many requirements the score rests on', () => {
+    const r = assemble(elig, fit([req('required', 'yes'), req('required', 'unclear'), req('preferred', 'no')]), { quoteFailures: 0, truncated: false });
+    expect(r.basis).toEqual({ judged: 2, total: 3 });
   });
 
   it('does not repeat a hard requirement that an eligibility rule already handled', () => {

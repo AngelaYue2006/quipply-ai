@@ -1,4 +1,4 @@
-import { emptyResult, type MatchResult } from '../shared/match';
+import { emptyResult, MATCHER_VERSION, type MatchResult } from '../shared/match';
 import { matchProfileSubset } from '../shared/profile';
 import { checkEligibility, type Eligibility } from './eligibility';
 import type { FitCall } from './llm-fit';
@@ -30,7 +30,7 @@ export class NotScoredMatcher implements Matcher {
 
 /** Rules in code, one model call for the checklist, score and verdict in code. */
 export class RubricMatcher implements Matcher {
-  readonly version = 'rubric@1';
+  readonly version = MATCHER_VERSION;
   constructor(private llmFit: FitCall) {}
 
   async score(input: MatchInput): Promise<MatchResult> {
@@ -39,9 +39,9 @@ export class RubricMatcher implements Matcher {
     if (!elig.eligible) return ineligible(elig); // stops here, no model call
     const { fit, truncated, description } = await this.llmFit(input);
     const checked = verifyQuotes(fit, description, matchProfileSubset(input.profile));
-    return assemble(elig, checked.fit, { quoteFailures: checked.failed, truncated });
+    return assemble(elig, checked.fit, { quoteFailures: checked.failed, truncated, ignored: checked.ignored });
   }
 }
 
 /** The matcher version the app currently uses; stored results with another version are stale. */
-export const ACTIVE_MATCHER_VERSION = 'rubric@1';
+export const ACTIVE_MATCHER_VERSION = MATCHER_VERSION;

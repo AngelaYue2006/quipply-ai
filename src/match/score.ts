@@ -28,11 +28,14 @@ export function computeScore(fit: FitChecklist, cfg: ScoreConfig = SCORE_CONFIG)
   return { score, judged: judged.length };
 }
 
+const skillChip = (r: FitChecklist['requirements'][number]) =>
+  r.met === 'partial' ? { skill: r.text, have: false, partial: true } : { skill: r.text, have: r.met === 'yes' };
+
 /** Turn eligibility + a quote-checked checklist into the result the dashboard shows. */
 export function assemble(
   elig: Eligibility,
   fit: FitChecklist,
-  extra: { quoteFailures: number; truncated: boolean },
+  extra: { quoteFailures: number; truncated: boolean; ignored?: MatchResult['ignored'] },
   cfg: ScoreConfig = SCORE_CONFIG,
 ): MatchResult {
   const { score, judged } = computeScore(fit, cfg);
@@ -61,10 +64,12 @@ export function assemble(
       .sort((a, b) => order[a.kind] - order[b.kind])
       .map((r) => ({ point: r.met === 'partial' ? `${r.text} (partly)` : r.text, severity: r.kind })),
     skills: {
-      required: skillItems.filter((r) => r.kind === 'required').map((r) => ({ skill: r.text, have: r.met === 'yes' })),
-      preferred: skillItems.filter((r) => r.kind === 'preferred').map((r) => ({ skill: r.text, have: r.met === 'yes' })),
+      required: skillItems.filter((r) => r.kind === 'required').map(skillChip),
+      preferred: skillItems.filter((r) => r.kind === 'preferred').map(skillChip),
     },
     summary: fit.summary || null,
     warnings,
+    basis: { judged, total: fit.requirements.length },
+    ignored: extra.ignored ?? [],
   };
 }

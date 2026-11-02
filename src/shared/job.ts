@@ -28,7 +28,13 @@ export type JobRow = {
   notes: string;
   isNew: boolean;
   hasDescription: boolean;
-  match: { score: number | null; verdict: MatchResult['verdict']; status: MatchResult['status']; stale: boolean } | null;
+  match: {
+    score: number | null;
+    verdict: MatchResult['verdict'];
+    status: MatchResult['status'];
+    stale: boolean;
+    basis?: MatchResult['basis'];
+  } | null;
 };
 
 export type JobDetail = JobRow & {

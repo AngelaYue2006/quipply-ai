@@ -223,10 +223,14 @@ export type MatchResult = {
   eligibility: { eligible: boolean | null; blockers: { rule: string; detail: string }[] };
   strengths: { point: string; evidence: { job: string; profile: string } }[];
   gaps: { point: string; severity: 'required' | 'preferred' }[];
-  skills: { required: { skill: string; have: boolean }[];
-            preferred: { skill: string; have: boolean }[] };
+  skills: { required: { skill: string; have: boolean; partial?: boolean }[];   // partial = met "partial"
+            preferred: { skill: string; have: boolean; partial?: boolean }[] };
   summary: string | null;
   warnings: string[];   // e.g. 'posting mentions a clearance requirement', 'low confidence'
+  basis?: { judged: number; total: number };  // requirements the score rests on (not "unclear") out of all listed
+  ignored?: { point: string; kind: 'required' | 'preferred'; claimed: 'yes' | 'partial' | 'no';
+              jobQuote: string; profileEvidence: string | null;
+              reasons: ('job_quote_not_found' | 'evidence_not_found')[] }[];  // quote-check rejects, shown under "Not counted"
 };
 
 // What the model returns (Zod schema); the model never returns a score
@@ -244,7 +248,7 @@ export type FitChecklist = {
 };
 
 export class RubricMatcher implements Matcher {
-  version = 'rubric@1';
+  version = 'rubric@3';   // rubric@1 until Nov 1, 2026; @2 and @3 loosened the quote check (see Quote check)
   async score(input: MatchInput): Promise<MatchResult> {
     if (!input.description) return notScored('No description yet; fetch it first.');
     const elig = checkEligibility(input);           // eligibility.ts, no model
@@ -306,12 +310,16 @@ User message: `<job title="…" company="…">{description}</job>` followed by `
 
 **Quote check (code).** For every requirement, `jobQuote` must appear in the description and `profileEvidence` must appear in the serialized profile, compared after normalizing whitespace and case. An item whose evidence isn't found is downgraded to `unclear` and counted in a warning, so invented evidence can't raise a score.
 
+*Changed Nov 1, 2026 (`rubric@2`):* models often cite several profile entries at once ("Python, TypeScript, SQL", "BS in Computer Science", "Software Engineering Intern at Acme"), and the exact-quote rule rejected these, which left scores resting on one or two items. Evidence now also passes when it is a list (split on commas, semicolons, slashes, "and", "&") whose every part appears in the profile as whole words ("SQL" doesn't match inside "PostgreSQL"). Parts joined by "at" or "in" must all come from the same profile entry, so a title from one job can't be paired with another job's company. A part may also be built only from whole field values of one entry, plus that entry's field names and small connectors ("BS Computer Science", "graduation 2028-05", "Operating Systems coursework"). Paraphrases, partial values, wrong values and invented entries still fail. `jobQuote` is unchanged and must still be exact.
+
 **Step 3 — Score and verdict, in code** (`score.ts`):
 
 - Weights: required items 3, preferred 1. Values: yes 1, partial 0.5, no 0. Unclear items are left out.
 - `score = round(100 × Σ(weight × value) / Σ weight)` over the judged items.
 - Two or more required items marked "no" cap the score at 59.
 - Fewer than 3 judged items add the warning "low confidence".
+- The result records `basis` (judged items out of all listed). The match panel shows "Based on X of Y requirements" and the job table shows "X of Y judged", highlighted when fewer than 3, so a score resting on one or two items is visible.
+- The result also records `ignored`: each item the quote check rejected, with what the model claimed, its quotes and why it failed. The match panel lists them in a collapsed "Not counted" section. They never count toward the score and never appear as strengths.
 - Verdict: 80+ strong, 65–79 good, 50–64 stretch, below 50 weak; `ineligible` comes only from step 1. Keep the weights and thresholds in config and tune them on your labels.
 - Strengths = items met "yes" with their evidence; gaps = items met "no" or "partial", required first; the skills checklist = items in the skill category.
 - `hardRequirements` the model found that no step-1 rule handled become warnings ("posting mentions a clearance requirement").
@@ -421,7 +429,7 @@ Build in order and stop for review after each acceptance check.
 - [ ] Score match and Score selected (cost estimate, confirm, two at a time, progress, cancel); score column and minimum-score filter.
 - [ ] `match:demo` and `match:eval` scripts; label about 20 jobs in `fixtures/match-labels.json` (roughly 5 strong, 5 weak, 5 in between, 3 ineligible, 2 without a description).
 
-**Accept:** `match:eval` agrees with your verdict on at least 14 of 20 jobs and is within one step on at least 18; every job you labeled ineligible is caught; no evidence that failed the quote check appears in the panel; `match:demo` prints the prompt, input and output for one real job.
+**Accept:** `match:eval` agrees with your verdict on at least 14 of 20 jobs and is within one step on at least 18; every job you labeled ineligible is caught; no evidence that failed the quote check appears as a strength or counts toward the score (it is listed only under "Not counted", labeled with why it failed); `match:demo` prints the prompt, input and output for one real job.
 
 **Building matching first:** M5 needs only M0, the `Profile` schema from M1, and job descriptions. To build it before the rest, give `match:demo` file inputs (`--profile profile.json --job job.json --description description.txt`) and work from saved fixtures; wire it into the dashboard once M3 and M4 exist.
 

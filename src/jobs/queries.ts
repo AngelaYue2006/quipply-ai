@@ -36,6 +36,7 @@ function toRow(
           verdict: extra.match.result.verdict,
           status: extra.match.status,
           stale: isStale(extra.match, extra.profileVersion, ACTIVE_MATCHER_VERSION),
+          basis: extra.match.result.basis,
         }
       : null,
   };

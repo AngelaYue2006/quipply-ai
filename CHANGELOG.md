@@ -1,5 +1,17 @@
 # Changelog
 
+## Matching: list evidence and score basis, `rubric@2` (2026-11-01)
+
+- **Problem:** scores on real jobs came out as 0 or 100. `gemini-3.5-flash-lite` cites several profile entries at once ("Python, TypeScript, JavaScript"); the exact-quote check rejected those, mostly on "yes" items because "no" items need no profile quote. Scores then rested on 1–2 leftover items. In three real runs, the check rejected 5, 4 and 2 items.
+- **Quote check:** evidence also passes as a list of exact profile entries (commas, semicolons, slashes, "and", "&"), matched as whole words. Parts joined by "at" or "in" must come from the same profile entry. Paraphrases, invented entries and `jobQuote` rules are unchanged. SPEC.md updated.
+- **Score basis:** results now include `basis: { judged, total }`. The match panel shows "Based on X of Y requirements"; the job table shows "X of Y judged", in amber below 3.
+- Matcher version is now `rubric@2` (shared as `MATCHER_VERSION` in `src/shared/match.ts`), so existing scores show as stale until rescored.
+- **Effect on saved model outputs (replayed offline, no new calls):** USAFacts on Flash-Lite went from 1 of 6 judged (100) to 4 of 6 (100); the 2 still rejected are paraphrases. USAFacts on 3.8 Flash went from 1 rejection to 0. NYT Product Manager went from 0 / weak (1 judged) to 50 / stretch (2 judged, low confidence).
+- Tests: 113 pass (3 new: list evidence that must pass, evidence that must still fail, and the score basis).
+- **Stitched fields:** evidence like "Texas A&M University, BS Computer Science, graduation 2028-05" was rejected, because "BS" and "Computer Science" are separate fields and "graduation" is a field name. A part now also passes when it is built only from whole field values of one entry, plus that entry's field names and connectors ("in", "at", "of", "from", "with", "for", "-"). Wrong dates, partial values and mixes of different entries still fail. Checked against the real local profile (pass/fail only). Matcher version is now `rubric@3`. Tests: 116 pass (2 new).
+- **Not counted:** results now keep the items the quote check rejected (`ignored`: the requirement, what the model claimed, both quotes and the reason). The match panel shows them in a collapsed "Not counted" section; they never affect the score or strengths. The spec's acceptance line ("no evidence that failed the quote check appears in the panel") now reads "appears as a strength or counts toward the score". Tests: 114 pass (1 new).
+- Fixed: a skill met "partial" showed as a red ✗ chip, making a half-credit score look like all misses. Skill chips now have three states (✓ met, ½ partly met, ✗ missing). Results scored before this fix still show partial as ✗ until rescored.
+
 ## Gemini support (2026-11-01)
 
 - Model calls can now go to Gemini as well as Claude. The provider is picked from the model ID (`gemini-…` or `claude-…`); each uses its own key in `.env` (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`). With a Gemini key set, defaults are `gemini-3.5-flash-lite` (matching) and `gemini-3.8-flash` (resume import). Settings rejects model IDs from other providers and shows which key each model needs.
@@ -14,7 +26,7 @@
 - ai.google.dev models page: stable text models `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.6-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`; all accept PDF input and support structured outputs.
 - Pricing page (paid, standard, per 1M tokens, output includes thinking): 3.5 Flash-Lite $0.30 / $2.50; 3.8 Flash and 3.6 Flash $0.75 / $3.75 through 2026-12-31, then $1.50 / $7.50; 4 Argon $2 / $10 through 2026-11-30, then $4 / $20; 3.1 Flash-Lite $0.25 / $1.50. Free tier: "used to improve our products" yes; paid: no.
 - Interactions API (`client.interactions.create`): `system_instruction`, `input` as `user_input` / `model_output` steps, `response_format: { type: 'text', mime_type: 'application/json', schema }`, `generation_config.max_output_tokens`, `store`; PDFs as `{ type: 'document', data, mime_type: 'application/pdf' }` (up to 50 MB / 1000 pages). Response: `status`, `output_text`, `usage.total_input_tokens` / `total_output_tokens` / `total_thought_tokens`. Checked against the SDK's type definitions and by capturing the SDK's request with a local fake server (`POST /v1beta/interactions`, key in `x-goog-api-key`).
-- Live check: the Gemini key lists all four models above. One `match:demo` run (fake profile, public NYT posting, scratch database) with `gemini-3.5-flash-lite` returned schema-valid JSON on the first try: 2,181 input / 658 output tokens, about $0.0023, 2.3 s. Resume import on Gemini hasn't been run live yet.
+- Live check: the Gemini key lists all four models above. One `match:demo` run (fake profile, public NYT posting, scratch database) with `gemini-3.5-flash-lite` returned schema-valid JSON on the first try: 2,181 input / 658 output tokens, about $0.0023, 2.3 s. Resume import on Gemini (`gemini-3.8-flash`, real PDF from the dashboard) has since succeeded on the first try: 868 input / 3,599 output tokens.
 - Seen in that run: the quote check dropped the evidence "Software Engineering Intern at Acme Widgets" because it joins two profile fields rather than quoting one. Worth revisiting when tuning matching.
 
 ## V1 dark theme and job-board scrolling (2026-11-01)
